@@ -22,11 +22,27 @@ curl -sSL https://raw.githubusercontent.com/ricyoung/claude-openai-mcp/main/inst
 
 This will:
 1. Install the MCP server
-2. Set up your OpenAI API key
+2. **Prompt you for your OpenAI API key** (or you can add it later)
 3. Configure Claude Code automatically
 4. Create all necessary files
 
 After installation, restart Claude Code and look for "claude-openai-mcp" in the MCP menu.
+
+### Setting Your API Key
+
+**During installation:** The installer will prompt you:
+```
+Enter your OpenAI API key (or press Enter to skip): 
+```
+
+**After installation:** If you skipped or need to update your key:
+```bash
+# Option 1: Edit the .env file
+echo "OPENAI_API_KEY=your-key-here" > ~/claude-openai-mcp/.env
+
+# Option 2: Or set it as an environment variable
+export OPENAI_API_KEY="your-key-here"
+```
 
 ## Features
 
@@ -255,15 +271,20 @@ pytest tests/
 ### Common Issues
 
 1. **"OPENAI_API_KEY not found"**
-   - Ensure the API key is set in your environment or `.env` file
+   - Set your API key: `echo "OPENAI_API_KEY=your-key" > ~/claude-openai-mcp/.env`
+   - Or re-run the installer: `cd ~/claude-openai-mcp && ./install.sh`
 
 2. **"Model o3-pro not available"**
-   - Verify you have access to o3_pro
+   - Verify you have access to o3-pro in your OpenAI account
    - Check if you need to use a different model name
 
 3. **"Connection refused"**
-   - Ensure the MCP server is running
+   - Restart Claude Code after installation
    - Check the path in Claude Code configuration
+
+4. **"Request timed out"**
+   - o3-pro can take several minutes - this is normal
+   - For very complex tasks, consider breaking them into smaller parts
 
 ### Debug Mode
 
