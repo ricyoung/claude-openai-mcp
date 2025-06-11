@@ -1,6 +1,32 @@
 # Claude-OpenAI MCP Server
 
-A Model Context Protocol (MCP) server that bridges Claude Code with OpenAI's o3_pro model, providing advanced coding capabilities through specialized tools.
+A Model Context Protocol (MCP) server that bridges Claude Code with OpenAI's o3-pro model, providing advanced coding capabilities through specialized tools.
+
+## ⚠️ Important: About o3-pro
+
+**Pricing:** o3-pro is expensive!
+- Input: $20.00 per 1M tokens
+- Output: $80.00 per 1M tokens
+- A single complex request could cost several dollars
+
+**Performance:**
+- Requests may take **several minutes** to complete
+- o3-pro uses extensive compute for deep reasoning
+- No streaming support - you'll need to wait for the full response
+
+## 🚀 Quick Install (macOS)
+
+```bash
+curl -sSL https://raw.githubusercontent.com/ricyoung/claude-openai-mcp/main/install.sh | bash
+```
+
+This will:
+1. Install the MCP server
+2. Set up your OpenAI API key
+3. Configure Claude Code automatically
+4. Create all necessary files
+
+After installation, restart Claude Code and look for "claude-openai-mcp" in the MCP menu.
 
 ## Features
 
@@ -16,25 +42,30 @@ A Model Context Protocol (MCP) server that bridges Claude Code with OpenAI's o3_
 
 ### 🚀 Key Capabilities
 
-- **Streaming Support**: Real-time responses for better user experience
-- **Configurable Reasoning Depth**: Adjust o3_pro's reasoning level (low/medium/high)
+- **Deep Reasoning**: Leverages o3-pro's advanced reasoning capabilities
+- **Configurable Reasoning Depth**: Adjust reasoning level (low/medium/high)
 - **Safety-First Approach**: Built-in security review capabilities
 - **Production-Ready**: Comprehensive error handling and logging
-- **Flexible Configuration**: Environment-based settings
+- **Long Timeout Support**: Handles o3-pro's extended processing times
 
 ## Prerequisites
 
+- macOS (installer is macOS-specific)
 - Python 3.8 or higher
-- OpenAI API key with o3_pro access
+- OpenAI API key with o3-pro access
 - Claude Code installed
 
-## Installation
+## Manual Installation
 
-### 1. Clone the Repository
+If you prefer not to use the automatic installer:
+
+### 1. Clone and Setup
 
 ```bash
-git clone https://github.com/yourusername/claude-openai-mcp.git
+git clone https://github.com/ricyoung/claude-openai-mcp.git
 cd claude-openai-mcp
+python3 -m venv venv
+source venv/bin/activate
 ```
 
 ### 2. Install Dependencies
@@ -54,31 +85,29 @@ OPENAI_API_KEY=your-openai-api-key
 # Optional (defaults shown)
 OPENAI_MODEL=o3-pro
 TEMPERATURE=0.2
-MAX_TOKENS=4096
+MAX_TOKENS=100000  # o3-pro supports up to 100k output tokens
 TOP_P=0.95
 REASONING_DEPTH=medium  # low, medium, high
-ENABLE_STREAMING=true
 SAFETY_THRESHOLD=medium  # low, medium, high
 LOG_LEVEL=INFO
 ```
 
 ### 4. Configure Claude Code
 
-Add the MCP server to your Claude Code configuration (`claude_desktop_config.json`):
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ```json
 {
   "mcpServers": {
     "claude-openai-mcp": {
-      "command": "python",
-      "args": ["/path/to/claude-openai-mcp/src/server.py"],
-      "env": {
-        "OPENAI_API_KEY": "your-openai-api-key"
-      }
+      "command": "/path/to/claude-openai-mcp/venv/bin/python",
+      "args": ["/path/to/claude-openai-mcp/src/server.py"]
     }
   }
 }
 ```
+
+Then restart Claude Code.
 
 ## Usage Examples
 
@@ -197,12 +226,11 @@ Applies systematic reasoning to complex problems.
 |----------|-------------|---------|
 | `OPENAI_API_KEY` | Your OpenAI API key | Required |
 | `OPENAI_MODEL` | Model to use | o3-pro |
-| `OPENAI_BASE_URL` | Custom API endpoint | None |
+| `OPENAI_BASE_URL` | Custom API endpoint | https://api.openai.com |
 | `TEMPERATURE` | Response creativity | 0.2 |
-| `MAX_TOKENS` | Maximum response length | 4096 |
+| `MAX_TOKENS` | Maximum response length | 100000 |
 | `TOP_P` | Nucleus sampling | 0.95 |
 | `REASONING_DEPTH` | Default reasoning level | medium |
-| `ENABLE_STREAMING` | Enable streaming responses | true |
 | `SAFETY_THRESHOLD` | Security check sensitivity | medium |
 | `LOG_LEVEL` | Logging verbosity | INFO |
 

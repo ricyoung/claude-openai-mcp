@@ -65,15 +65,7 @@ class BaseTool(ABC):
         
         try:
             response = await self.client.complete(messages, **kwargs)
-            
-            # Handle streaming response
-            if hasattr(response, '__aiter__'):
-                result = ""
-                async for chunk in response:
-                    result += chunk
-                return result
-            else:
-                return response
+            return response
                 
         except Exception as e:
             logger.error(f"Error in {self.name}: {e}")

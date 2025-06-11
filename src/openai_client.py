@@ -4,90 +4,100 @@ OpenAI API client wrapper for o3_pro model
 
 import asyncio
 import logging
-from typing import Any, AsyncIterator, Dict, List, Optional, Union
-
-from openai import AsyncOpenAI
-from openai.types.chat import ChatCompletionMessageParam
+from typing import Any, Dict, List, Optional
+import aiohttp
+import json
 
 logger = logging.getLogger(__name__)
 
 class OpenAIClient:
-    """Wrapper for OpenAI API with o3_pro optimizations"""
+    """Wrapper for OpenAI API with o3_pro optimizations using Responses API"""
     
     def __init__(self, config):
         self.config = config
-        self.client = AsyncOpenAI(
-            api_key=config.openai_api_key,
-            base_url=config.openai_base_url
-        )
+        self.api_key = config.openai_api_key
+        self.base_url = config.openai_base_url or "https://api.openai.com"
         self.model = config.openai_model
-    
+        
     async def complete(
         self,
-        messages: List[ChatCompletionMessageParam],
+        messages: List[Dict[str, str]],
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
         top_p: Optional[float] = None,
-        stream: Optional[bool] = None,
         **kwargs
-    ) -> Union[str, AsyncIterator[str]]:
+    ) -> str:
         """
-        Send completion request to OpenAI API
+        Send completion request to OpenAI Responses API (v1/responses)
+        Note: o3-pro doesn't support streaming and may take several minutes
         
         Args:
             messages: List of chat messages
             temperature: Override default temperature
             max_tokens: Override default max_tokens
             top_p: Override default top_p
-            stream: Override default streaming setting
             **kwargs: Additional parameters for the API
         
         Returns:
-            Completion text or async iterator for streaming
+            Completion text
         """
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        # o3-pro uses the Responses API endpoint
+        url = f"{self.base_url}/v1/responses"
+        
+        payload = {
+            "model": self.model,
+            "messages": messages,
+            "temperature": temperature or self.config.temperature,
+            "max_tokens": max_tokens or self.config.max_tokens,
+            "top_p": top_p or self.config.top_p,
+            **kwargs
+        }
+        
         try:
-            params = {
-                "model": self.model,
-                "messages": messages,
-                "temperature": temperature or self.config.temperature,
-                "max_tokens": max_tokens or self.config.max_tokens,
-                "top_p": top_p or self.config.top_p,
-                **kwargs
-            }
-            
-            stream = stream if stream is not None else self.config.enable_streaming
-            
-            if stream:
-                return self._stream_completion(params)
-            else:
-                response = await self.client.chat.completions.create(**params)
-                return response.choices[0].message.content or ""
+            async with aiohttp.ClientSession() as session:
+                # Set a long timeout for o3-pro as it can take several minutes
+                timeout = aiohttp.ClientTimeout(total=600)  # 10 minutes
                 
+                async with session.post(
+                    url, 
+                    headers=headers, 
+                    json=payload,
+                    timeout=timeout
+                ) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        # Extract response from the Responses API format
+                        if "choices" in data and data["choices"]:
+                            return data["choices"][0]["message"]["content"] or ""
+                        else:
+                            logger.error(f"Unexpected response format: {data}")
+                            return "Error: Unexpected response format"
+                    else:
+                        error_text = await response.text()
+                        logger.error(f"OpenAI API error: {response.status} - {error_text}")
+                        raise Exception(f"API Error: {response.status} - {error_text}")
+                        
+        except asyncio.TimeoutError:
+            logger.error("Request timed out. o3-pro can take several minutes for complex requests.")
+            raise Exception("Request timed out. Try using background mode for long-running requests.")
         except Exception as e:
             logger.error(f"OpenAI API error: {e}")
             raise
     
-    async def _stream_completion(self, params: Dict[str, Any]) -> AsyncIterator[str]:
-        """Handle streaming completion"""
-        params["stream"] = True
-        
-        try:
-            stream = await self.client.chat.completions.create(**params)
-            async for chunk in stream:
-                if chunk.choices[0].delta.content:
-                    yield chunk.choices[0].delta.content
-        except Exception as e:
-            logger.error(f"Streaming error: {e}")
-            raise
-    
     async def complete_with_reasoning(
         self,
-        messages: List[ChatCompletionMessageParam],
+        messages: List[Dict[str, str]],
         reasoning_depth: Optional[str] = None,
         **kwargs
     ) -> Dict[str, Any]:
         """
         Complete with explicit reasoning steps (for o3_pro)
+        o3-pro naturally provides reasoning in its responses
         
         Returns dict with 'reasoning' and 'answer' keys
         """
@@ -108,33 +118,15 @@ class OpenAIClient:
         response = await self.complete(messages_copy, **kwargs)
         
         # Parse reasoning and answer
-        # This is a simplified version - you might want more sophisticated parsing
-        if isinstance(response, str):
-            parts = response.split("\n\n")
-            if len(parts) >= 2:
-                return {
-                    "reasoning": "\n\n".join(parts[:-1]),
-                    "answer": parts[-1]
-                }
-            else:
-                return {
-                    "reasoning": "",
-                    "answer": response
-                }
+        # o3-pro typically includes reasoning in its responses
+        parts = response.split("\n\n")
+        if len(parts) >= 2:
+            return {
+                "reasoning": "\n\n".join(parts[:-1]),
+                "answer": parts[-1]
+            }
         else:
-            # Handle streaming case
-            full_response = ""
-            async for chunk in response:
-                full_response += chunk
-            
-            parts = full_response.split("\n\n")
-            if len(parts) >= 2:
-                return {
-                    "reasoning": "\n\n".join(parts[:-1]),
-                    "answer": parts[-1]
-                }
-            else:
-                return {
-                    "reasoning": "",
-                    "answer": full_response
-                }
+            return {
+                "reasoning": "",
+                "answer": response
+            }

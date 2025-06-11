@@ -18,14 +18,11 @@ class Config:
         
         # Model parameters
         self.temperature: float = float(os.getenv("TEMPERATURE", "0.2"))
-        self.max_tokens: int = int(os.getenv("MAX_TOKENS", "4096"))
+        self.max_tokens: int = int(os.getenv("MAX_TOKENS", "100000"))  # o3-pro supports up to 100k
         self.top_p: float = float(os.getenv("TOP_P", "0.95"))
         
         # Reasoning depth levels
         self.reasoning_depth: str = os.getenv("REASONING_DEPTH", "medium")  # low, medium, high
-        
-        # Streaming
-        self.enable_streaming: bool = os.getenv("ENABLE_STREAMING", "true").lower() == "true"
         
         # Safety
         self.safety_threshold: str = os.getenv("SAFETY_THRESHOLD", "medium")  # low, medium, high
