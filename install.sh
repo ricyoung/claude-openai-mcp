@@ -40,9 +40,19 @@ echo -e "${GREEN}✓ Python $PYTHON_VERSION detected${NC}"
 
 # Default installation directory
 DEFAULT_DIR="$HOME/claude-openai-mcp"
-echo
-read -p "Installation directory [$DEFAULT_DIR]: " INSTALL_DIR
-INSTALL_DIR=${INSTALL_DIR:-$DEFAULT_DIR}
+
+# Check if running in a pipe/non-interactive mode
+if [ -t 0 ]; then
+    # Interactive mode - prompt for directory
+    echo
+    read -p "Installation directory [$DEFAULT_DIR]: " INSTALL_DIR
+    INSTALL_DIR=${INSTALL_DIR:-$DEFAULT_DIR}
+else
+    # Non-interactive mode - use default
+    echo
+    echo "Using default installation directory: $DEFAULT_DIR"
+    INSTALL_DIR="$DEFAULT_DIR"
+fi
 
 # Create directory if it doesn't exist
 mkdir -p "$(dirname "$INSTALL_DIR")"
@@ -78,7 +88,16 @@ echo "   Input: \$20.00 per 1M tokens"
 echo "   Output: \$80.00 per 1M tokens"
 echo "   Requests may take several minutes to complete"
 echo
-read -p "Enter your OpenAI API key (or press Enter to skip): " OPENAI_API_KEY
+
+if [ -t 0 ]; then
+    # Interactive mode - prompt for API key
+    read -p "Enter your OpenAI API key (or press Enter to skip): " OPENAI_API_KEY
+else
+    # Non-interactive mode - skip API key prompt
+    echo "Skipping API key prompt (non-interactive mode)"
+    echo "You can set your API key later in the .env file"
+    OPENAI_API_KEY=""
+fi
 
 # Create .env file
 if [ -n "$OPENAI_API_KEY" ]; then
