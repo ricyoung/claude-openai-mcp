@@ -14,6 +14,30 @@ A Model Context Protocol (MCP) server that bridges Claude Code with OpenAI's o3-
 - o3-pro uses extensive compute for deep reasoning
 - No streaming support - you'll need to wait for the full response
 
+## 📋 o3-pro Usage Guidelines
+
+**o3-pro is NOT for simple tasks** - it's a premium model designed for complex challenges:
+
+### ✅ When to Use o3-pro
+- **Complex code generation** requiring multi-step reasoning
+- **Debugging and refactoring** where deep code analysis is critical
+- **Algorithm implementation** and optimization
+- **Technical problem-solving** requiring rigorous analysis
+- Tasks where **code quality matters more than speed**
+
+### 📊 Key Characteristics
+- **Premium accuracy**: 10%+ better than o3 on code-specialized tasks
+- **Advanced capabilities**: Web search, Python execution, image reasoning
+- **Deep reasoning**: Allocates significantly more tokens per inference
+- **Superior benchmarks**: Outperforms competitors on AIME 2024 and other technical tests
+- **Multi-step pipeline**: Excels at "thinking harder" through complex problems
+
+### ⚠️ Best Practices
+- Reserve for tasks where correctness is paramount
+- Not cost-effective for simple queries or quick responses
+- Ideal for production-critical code generation
+- Consider using standard models for routine tasks
+
 ## 🚀 Quick Install (macOS)
 
 ```bash
