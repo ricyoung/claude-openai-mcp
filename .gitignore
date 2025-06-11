@@ -39,7 +39,30 @@ env/
 *.swp
 *.swo
 *~
+
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Claude files
+claude_desktop_config.json
+.claude/
+*.claude-session
 
 # Testing
 .coverage
