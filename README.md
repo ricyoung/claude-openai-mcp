@@ -41,7 +41,13 @@ A Model Context Protocol (MCP) server that bridges Claude Code with OpenAI's o3-
 ## 🚀 Quick Install (macOS)
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/ricyoung/claude-openai-mcp/main/install.sh | bash
+# Recommended: Clone and install (avoids caching issues)
+git clone https://github.com/ricyoung/claude-openai-mcp.git ~/claude-openai-mcp && \
+cd ~/claude-openai-mcp && \
+bash install.sh
+
+# Alternative: Direct download (may have 5-minute cache delay)
+curl -sSL "https://raw.githubusercontent.com/ricyoung/claude-openai-mcp/main/install.sh?v=$(date +%s)" | bash
 ```
 
 This will:
