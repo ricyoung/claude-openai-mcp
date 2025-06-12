@@ -213,10 +213,38 @@ chmod +x "$INSTALL_DIR/start-server.sh"
 echo
 echo -e "${GREEN}✅ Installation complete!${NC}"
 echo
+
+# Check if claude CLI is available and add config
+if command -v claude &> /dev/null; then
+    echo "Adding MCP server to Claude Code CLI..."
+    
+    # Create temporary config file
+    TEMP_MCP_CONFIG=$(mktemp)
+    cat > "$TEMP_MCP_CONFIG" << EOF
+{
+  "mcpServers": {
+    "claude-openai-mcp": {
+      "command": "$INSTALL_DIR/venv/bin/python",
+      "args": ["$INSTALL_DIR/launch_mcp.py"]
+    }
+  }
+}
+EOF
+    
+    # Try to add the config
+    if claude code config add "$TEMP_MCP_CONFIG" 2>/dev/null; then
+        echo -e "${GREEN}✓ Added to Claude Code CLI${NC}"
+    else
+        echo -e "${YELLOW}Note: Could not add to Claude Code CLI automatically${NC}"
+    fi
+    
+    rm -f "$TEMP_MCP_CONFIG"
+fi
+
 echo "Next steps:"
-echo "1. Restart Claude Code (or Claude Desktop) for the changes to take effect"
-echo "2. Check the MCP menu with /mcp to see 'claude-openai-mcp'"
-echo "3. If using Claude Code CLI, you may need to run: claude code config add"
+echo "1. If using Claude Desktop app, restart it for changes to take effect"
+echo "2. If using Claude Code CLI, run: claude mcp list"
+echo "3. You should see 'claude-openai-mcp' in the MCP menu"
 echo
 echo "Available tools:"
 echo "  • o3_code     - Generate production-ready code"
