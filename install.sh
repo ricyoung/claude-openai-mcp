@@ -130,7 +130,15 @@ echo
 echo "Configuring Claude Code..."
 
 # Find Claude Code config file
-CONFIG_FILE="$HOME/Library/Application Support/Claude/claude_desktop_config.json"
+# Try multiple possible locations
+if [ -f "$HOME/.config/claude-code/config.json" ]; then
+    CONFIG_FILE="$HOME/.config/claude-code/config.json"
+elif [ -f "$HOME/Library/Application Support/Claude/claude_code_config.json" ]; then
+    CONFIG_FILE="$HOME/Library/Application Support/Claude/claude_code_config.json"
+else
+    # Default to claude desktop config (works for both)
+    CONFIG_FILE="$HOME/Library/Application Support/Claude/claude_desktop_config.json"
+fi
 
 if [ ! -f "$CONFIG_FILE" ]; then
     echo -e "${YELLOW}Claude Code config not found. Creating...${NC}"
@@ -141,7 +149,7 @@ fi
 # Create temporary config with our server
 TEMP_CONFIG=$(mktemp)
 PYTHON_PATH="$INSTALL_DIR/venv/bin/python"
-SERVER_PATH="$INSTALL_DIR/src/server.py"
+SERVER_PATH="$INSTALL_DIR/launch_mcp.py"
 
 # Use Python to safely merge JSON
 python3 << EOF
@@ -206,8 +214,9 @@ echo
 echo -e "${GREEN}✅ Installation complete!${NC}"
 echo
 echo "Next steps:"
-echo "1. Restart Claude Code for the changes to take effect"
-echo "2. You should see 'claude-openai-mcp' in the MCP menu"
+echo "1. Restart Claude Code (or Claude Desktop) for the changes to take effect"
+echo "2. Check the MCP menu with /mcp to see 'claude-openai-mcp'"
+echo "3. If using Claude Code CLI, you may need to run: claude code config add"
 echo
 echo "Available tools:"
 echo "  • o3_code     - Generate production-ready code"
