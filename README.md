@@ -51,12 +51,15 @@ curl -sSL "https://raw.githubusercontent.com/ricyoung/claude-openai-mcp/main/ins
 ```
 
 This will:
-1. Install the MCP server
-2. **Prompt you for your OpenAI API key** (or you can add it later)
-3. Configure Claude Code automatically
-4. Create all necessary files
+1. Install the MCP server and dependencies
+2. Configure Claude Desktop (if no CLI detected) or Claude Code CLI (if available)
+3. Create launcher scripts and configuration files
 
-After installation, restart Claude Code and look for "claude-openai-mcp" in the MCP menu.
+**For Claude Code CLI users:** The installer will automatically run `claude mcp add` to register the server.
+
+**For Claude Desktop users:** Restart the app after installation.
+
+After setup, use `/mcp` in Claude to see "claude-openai-mcp" in the available servers.
 
 ### Setting Your API Key
 

@@ -215,25 +215,21 @@ echo
 echo -e "${GREEN}✅ Installation complete!${NC}"
 echo
 
-# If Claude CLI is available, provide manual instructions
+# If Claude CLI is available, add the MCP server
 if command -v claude &> /dev/null; then
     echo
-    echo -e "${YELLOW}To add to Claude Code CLI, run this command:${NC}"
-    echo
-    echo "cat > /tmp/claude-openai-mcp.json << 'EOF'"
-    echo "{"
-    echo "  \"mcpServers\": {"
-    echo "    \"claude-openai-mcp\": {"
-    echo "      \"command\": \"$INSTALL_DIR/venv/bin/python\","
-    echo "      \"args\": [\"$INSTALL_DIR/launch_mcp.py\"]"
-    echo "    }"
-    echo "  }"
-    echo "}"
-    echo "EOF"
-    echo
-    echo "claude code config add /tmp/claude-openai-mcp.json"
-    echo "rm /tmp/claude-openai-mcp.json"
-    echo
+    echo "Adding MCP server to Claude Code..."
+    
+    # Add to user scope so it's available in all projects
+    if claude mcp add -s user claude-openai-mcp "$INSTALL_DIR/venv/bin/python" "$INSTALL_DIR/launch_mcp.py" 2>/dev/null; then
+        echo -e "${GREEN}✓ Successfully added claude-openai-mcp to Claude Code${NC}"
+        echo "Run 'claude mcp list' to verify"
+    else
+        echo -e "${YELLOW}Manual setup required. Run this command:${NC}"
+        echo
+        echo "claude mcp add -s user claude-openai-mcp $INSTALL_DIR/venv/bin/python $INSTALL_DIR/launch_mcp.py"
+        echo
+    fi
 fi
 
 echo "Next steps:"
