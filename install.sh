@@ -125,34 +125,34 @@ else
     echo -e "${YELLOW}Skipping .env creation. You'll need to create it manually.${NC}"
 fi
 
-# Configure Claude Code
-echo
-echo "Configuring Claude Code..."
-
-# Find Claude Code config file
-# Try multiple possible locations
-if [ -f "$HOME/.config/claude-code/config.json" ]; then
-    CONFIG_FILE="$HOME/.config/claude-code/config.json"
-elif [ -f "$HOME/Library/Application Support/Claude/claude_code_config.json" ]; then
-    CONFIG_FILE="$HOME/Library/Application Support/Claude/claude_code_config.json"
+# Configure based on what's available
+if command -v claude &> /dev/null; then
+    # Claude CLI is available - skip desktop config
+    echo
+    echo "Claude Code CLI detected - configuration will be done manually"
+    SKIP_CONFIG=true
 else
-    # Default to claude desktop config (works for both)
+    # Configure Claude Desktop
+    echo
+    echo "Configuring Claude Desktop..."
+    SKIP_CONFIG=false
     CONFIG_FILE="$HOME/Library/Application Support/Claude/claude_desktop_config.json"
 fi
 
-if [ ! -f "$CONFIG_FILE" ]; then
-    echo -e "${YELLOW}Claude Code config not found. Creating...${NC}"
-    mkdir -p "$(dirname "$CONFIG_FILE")"
-    echo '{"mcpServers": {}}' > "$CONFIG_FILE"
-fi
+if [ "$SKIP_CONFIG" != "true" ]; then
+    if [ ! -f "$CONFIG_FILE" ]; then
+        echo -e "${YELLOW}Claude Desktop config not found. Creating...${NC}"
+        mkdir -p "$(dirname "$CONFIG_FILE")"
+        echo '{"mcpServers": {}}' > "$CONFIG_FILE"
+    fi
 
-# Create temporary config with our server
-TEMP_CONFIG=$(mktemp)
-PYTHON_PATH="$INSTALL_DIR/venv/bin/python"
-SERVER_PATH="$INSTALL_DIR/launch_mcp.py"
+    # Create temporary config with our server
+    TEMP_CONFIG=$(mktemp)
+    PYTHON_PATH="$INSTALL_DIR/venv/bin/python"
+    SERVER_PATH="$INSTALL_DIR/launch_mcp.py"
 
-# Use Python to safely merge JSON
-python3 << EOF
+    # Use Python to safely merge JSON
+    python3 << EOF
 import json
 import os
 
@@ -192,13 +192,14 @@ with open(temp_file, 'w') as f:
 print("✓ Configuration updated")
 EOF
 
-# Backup existing config and install new one
-if [ -f "$CONFIG_FILE" ]; then
-    cp "$CONFIG_FILE" "$CONFIG_FILE.backup"
-    echo -e "${GREEN}✓ Backed up existing config to $CONFIG_FILE.backup${NC}"
-fi
+    # Backup existing config and install new one
+    if [ -f "$CONFIG_FILE" ]; then
+        cp "$CONFIG_FILE" "$CONFIG_FILE.backup"
+        echo -e "${GREEN}✓ Backed up existing config to $CONFIG_FILE.backup${NC}"
+    fi
 
-mv "$TEMP_CONFIG" "$CONFIG_FILE"
+    mv "$TEMP_CONFIG" "$CONFIG_FILE"
+fi  # End of SKIP_CONFIG check
 
 # Create convenient launcher script
 cat > "$INSTALL_DIR/start-server.sh" << EOF
@@ -214,31 +215,25 @@ echo
 echo -e "${GREEN}✅ Installation complete!${NC}"
 echo
 
-# Check if claude CLI is available and add config
+# If Claude CLI is available, provide manual instructions
 if command -v claude &> /dev/null; then
-    echo "Adding MCP server to Claude Code CLI..."
-    
-    # Create temporary config file
-    TEMP_MCP_CONFIG=$(mktemp)
-    cat > "$TEMP_MCP_CONFIG" << EOF
-{
-  "mcpServers": {
-    "claude-openai-mcp": {
-      "command": "$INSTALL_DIR/venv/bin/python",
-      "args": ["$INSTALL_DIR/launch_mcp.py"]
-    }
-  }
-}
-EOF
-    
-    # Try to add the config
-    if claude code config add "$TEMP_MCP_CONFIG" 2>/dev/null; then
-        echo -e "${GREEN}✓ Added to Claude Code CLI${NC}"
-    else
-        echo -e "${YELLOW}Note: Could not add to Claude Code CLI automatically${NC}"
-    fi
-    
-    rm -f "$TEMP_MCP_CONFIG"
+    echo
+    echo -e "${YELLOW}To add to Claude Code CLI, run this command:${NC}"
+    echo
+    echo "cat > /tmp/claude-openai-mcp.json << 'EOF'"
+    echo "{"
+    echo "  \"mcpServers\": {"
+    echo "    \"claude-openai-mcp\": {"
+    echo "      \"command\": \"$INSTALL_DIR/venv/bin/python\","
+    echo "      \"args\": [\"$INSTALL_DIR/launch_mcp.py\"]"
+    echo "    }"
+    echo "  }"
+    echo "}"
+    echo "EOF"
+    echo
+    echo "claude code config add /tmp/claude-openai-mcp.json"
+    echo "rm /tmp/claude-openai-mcp.json"
+    echo
 fi
 
 echo "Next steps:"
